@@ -1,4 +1,6 @@
-//: String type Efficiency test based Playground
+// String, Character, Array type Efficiency test based Playground
+// Base is efficient solution for Palindrome problem
+// Sample code how implement efficiency test with flexibility of code
   
 import Foundation
 import PlaygroundSupport
@@ -230,20 +232,25 @@ class PalindromeTest {
         self.timer = timer
     }
     
-    func runTest() {
-        timer.defineHeader(columns: ["Implementation name", "Total time [s]", "operation time [s]", "Checksum"])
+    func runTest(logger: TimerLogger? = nil) {
+        var checkSum: Int = 0
+        
         timer.measureTime(operations: samples.count, workBlock: {
             var results = [Bool]()
-            var checkSum: Int = 0
+            var sum: Int = 0
             
             for word in samples {
                 let result = isPalindrome(word: word)
                 results.append(result)
-                checkSum += (result ? 1 : 0)
+                sum += (result ? 1 : 0)
             }
             
-            print("| \(checkSum) |")
+           checkSum = sum
         })
+        
+        if let logger {
+            logger.println(timer: timer, checksum: checkSum)
+        }
     }
     
     func isPalindrome(word: String) -> Bool {
@@ -275,28 +282,26 @@ class PalindromeTest {
 protocol Timer {
     var totalTime: Double { get }
     var singleTime: Double { get }
+    var operations: Int { get }
+    var name: String { get }
     func measureTime(operations: Int, workBlock: () -> Void)
-    func defineHeader(columns: [String])
 }
 
 class MyTimer: Timer {
     var totalTime: Double
     var singleTime: Double
+    var operations: Int
     var name: String
-    
-    private var header: String
-    var isHeaderPrinted: Bool = false
     
     init(name: String) {
         self.totalTime = 0
         self.singleTime = 0
+        self.operations = 0
         self.name = name
-        self.header = ""
     }
     
     func measureTime(operations: Int, workBlock: () -> Void) {
-        printHeader(operations: operations)
-        
+        self.operations = operations
         let start = DispatchTime.now()
         
         workBlock()
@@ -305,25 +310,42 @@ class MyTimer: Timer {
         let totalNano = end.uptimeNanoseconds - start.uptimeNanoseconds
         totalTime = Double(totalNano) / 1_000_000_000
         singleTime = totalTime / Double(operations)
-        
-        printRow(data: [name, String(format: "%.3f", totalTime), String(format: "%.6f", singleTime)])
+    }
+}
+
+class TimerLogger {
+    var header: String
+    
+    init() {
+        self.header = ""
     }
     
     func defineHeader(columns: [String]) {
+        if columns.isEmpty {
+            header = ""
+            return
+        }
         header = "| " + columns.joined(separator: " \t | ") + " |"
-        isHeaderPrinted = false
+    }
+    
+    func println(timer: Timer, checksum: Int = 0) {
+        printHeader(operations: timer.operations)
+        printRow(data: [timer.name, String(format: "%.3f", timer.totalTime),
+                        String(format: "%.6f", timer.singleTime),
+                        String(format: "%d", timer.operations),
+                        String(format: "%d", checksum)])
     }
     
     private func printRow(data: [String]) {
         let row = "| " + data.joined(separator: "\t | ") + " |"
-        print(row, terminator: "")
+        print(row)
     }
     
     private func printHeader(operations: Int) {
-        guard isHeaderPrinted == false && header.count > 0 else { return }
+        guard header.count > 0 else { return }
         print("Executed for \(operations) operations.")
         print(header)
-        isHeaderPrinted = true
+        header = ""
     }
 }
 
@@ -375,45 +397,52 @@ extension PalindromeTest {
     }
 }
 
-func testForWord(range: ClosedRange<Int>) {
+func TestForSampleWords(range: ClosedRange<Int>) {
     
     let myTimer = MyTimer(name: "char range \(range)")
-    myTimer.defineHeader(columns: ["Word length", "Total time [s]"])
     myTimer.measureTime(operations: 1) {
         
         var sampleGen = SampleGenerator(numberOfSamples: 1000, range: range)
         var samples: [String] = []
         let timer = MyTimer(name: "Sample Generation")
-        timer.defineHeader(columns: ["Implementation name", "Total time [s]", "sample time [s]", "samples"])
         timer.measureTime(operations: 1000) {
             samples = sampleGen.generate()
         }
+        
+        let logger = TimerLogger()
+        logger.defineHeader(columns: ["Implementation name", "Total time [s]", "operation time [s]", "Checksum"])
+        logger.println(timer: timer)
 
         // basing solution on array of characters
         var solution0 = Solution(queue: CharQueue(), stack: CharStack())
         var palindromTest0 = PalindromeTest(samples: samples, solution: solution0, timerName: "CharQueue & CharStack")
-        palindromTest0.runTest()
+        palindromTest0.runTest(logger: logger)
 
         // string stack
         var solution1 = Solution(queue: CharQueue(), stack: StringStack())
         var palindromTest1 = PalindromeTest(samples: samples, solution: solution1, timerName: "StringStack")
-        palindromTest1.runTest()
+        palindromTest1.runTest(logger: logger)
         
         // string stack and string queue
         var solution11 = Solution(queue: StringQueue(), stack: StringStack())
         var palindromTest11 = PalindromeTest(samples: samples, solution: solution11, timerName: "String Queue & Stack")
-        palindromTest11.runTest()
+        palindromTest11.runTest(logger: logger)
 
         // efficient queue using sliced array
         var solution2 = Solution(queue: EfficientQueue(), stack: CharStack())
         var palindromTest2 = PalindromeTest(samples: samples, solution: solution2, timerName: "EfficientQueue")
-        palindromTest2.runTest()
+        palindromTest2.runTest(logger: logger)
 
         var solution3 = Solution(queue: BuffCharQueue(), stack: CharStack())
         var palindromTest3 = PalindromeTest(samples: samples, solution: solution3, timerName: "BuffCharQueue")
-        palindromTest3.runTest()
+        palindromTest3.runTest(logger: logger)
     }
+    let logger = TimerLogger()
+    logger.defineHeader(columns: ["Word length", "Total time [s]"])
+    logger.println(timer: myTimer)
 }
 
-testForWord(range: 3...9)
-//testForWord(range: 10...29)
+
+TestForSampleWords(range: 3...9)
+TestForSampleWords(range: 10...29)
+
