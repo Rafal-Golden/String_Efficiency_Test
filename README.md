@@ -61,7 +61,7 @@ Each implementation is tested and the time is measured.
 ### 🔹 Small Words (length: 3–9)
 
 | Implementation Name       | Total Time [s] | Per Operation [s]  | Checksum |
-|---------------------------|----------------|--------------------|------------|----------|
+|---------------------------|----------------|--------------------|----------|
 | Sample Generation         | 1.113          | 0.001113           | 0        |
 | CharQueue & CharStack     | 3.011          | 0.003011           | 509      |
 | StringStack               | 2.370          | 0.002370           | 509      |
@@ -76,7 +76,7 @@ Each implementation is tested and the time is measured.
 ### 🔸 Medium Words (length: 10–29)
 
 | Implementation Name       | Total Time [s] | Per Operation [s]  | Checksum |
-|---------------------------|----------------|--------------------|------------|----------|
+|---------------------------|----------------|--------------------|----------|
 | Sample Generation         | 1.667          | 0.001667           | 0        |
 | CharQueue & CharStack     | 11.569         | 0.011569           | 496      |
 | StringStack               | 7.167          | 0.007167           | 496      |
